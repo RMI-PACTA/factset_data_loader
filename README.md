@@ -61,3 +61,32 @@ Here are details of your configuration. If you would like to change any of these
     19. Load executable path: /user/bin/psql
     22. Using Atomic Rebuild: Yes
 ```
+
+## Deploy
+
+```sh
+# replace these values with storage account name and resource group appropriate to your deployment
+ACI_PERS_STORAGE_ACCOUNT_NAME="pactadata"
+ACI_PERS_RESOURCE_GROUP="pacta-data"
+
+STORAGE_KEY=$(az storage account keys list --resource-group "$ACI_PERS_RESOURCE_GROUP" --account-name "$ACI_PERS_STORAGE_ACCOUNT_NAME" --query "[0].value" --output tsv)
+echo "$STORAGE_KEY"
+```
+
+```sh
+# change this value as needed.
+RESOURCEGROUP="myResourceGroup"
+
+# run from repo root
+
+az deployment group create --resource-group "$RESOURCEGROUP" --template-file azure-deploy.json --parameters @azure-deploy.parameters.json
+
+```
+
+To start a long-running process (to allow for attaching and debugging), add this to `properties` for the container:
+
+```json
+  "command": [
+    "tail", "-f", "/dev/null"
+  ]
+```

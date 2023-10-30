@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "identity": {
+      "value": "/subscriptions/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX/resourcegroups/XXXXXXXXXXXXXXXXX/providers/Microsoft.ManagedIdentity/userAssignedIdentities/XXXXXXXXXXX"
+    },
+    "serviceprincipal": {
+      "value": "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    },
+    "rawdata-storageaccountkey": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX/resourceGroups/XXXXXXXXXXXXXXXXX/providers/Microsoft.KeyVault/vaults/XXXXXXXXXXXXXXX"
+        },
+        "secretName": "rawdata-storageaccountkey"
+      }
+    },
+    "factset-database-user": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX/resourceGroups/XXXXXXXXXXXXXXXXX/providers/Microsoft.KeyVault/vaults/XXXXXXXXXXXXXXX"
+        },
+        "secretName": "factset-database-user"
+      }
+    },
+    "factset-database-password": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX/resourceGroups/XXXXXXXXXXXXXXXXX/providers/Microsoft.KeyVault/vaults/ExperimentVault"
+        },
+        "secretName": "factset-database-password"
+      }
+    }
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "0.0.4",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "identity": {
+      "type": "string",
+      "metadata": {
+        "description": "The ID of the user assigned identity to use for the container group."
+      }
+    },
+    "serviceprincipal": {
+      "type": "string",
+      "metadata": {
+        "description": "The ID of the service principal to use for the container group."
+      }
+    },
+    "containerGroupName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the container group."
+      }
+    },
+    "restartPolicy": {
+      "type": "string",
+      "defaultValue": "OnFailure",
+      "allowedValues": [
+        "Always",
+        "Never",
+        "OnFailure"
+      ],
+      "metadata": {
+        "description": "The behavior of Azure runtime if container has stopped."
+      }
+    },
+    "rawdata-storageaccountkey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The storage account key for the rawdata storage account."
+      }
+    },
+    "factset-database-user": {
+      "type": "securestring",
+      "metadata": {
+        "description": "username to connect to database"
+      }
+    },
+    "factset-database-password": {
+      "type": "securestring",
+      "metadata": {
+        "description": "password to connect to database"
+      }
+    },
+    "starttime": {
+      "type": "string",
+      "defaultValue": "[utcNow()]",
+      "metadata": {
+        "description": "The time to start the container group."
+      }
+    }
+  },
+  "variables": {
+    "azurecontainerregistry": "transitionmonitordockerregistry.azurecr.io"
+  },
+  "functions": [],
+  "resources": [
+    {
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2021-09-01",
+      "name": "[parameters('containerGroupName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[parameters('identity')]": {}
+        }
+      },
+      "metadata": {
+        "data-prep environmentVariables description": {
+          "R_DATABASE_USER": "The username for the database.",
+          "R_DATABASE_PASSWORD": "The password for the database.",
+          "DEPLOY_START_TIME": "The time the container was deployed.",
+          "R_CONFIG_ACTIVE": "The active config for the container.",
+          "R_CONFIG_FILE": "The config file for the container.",
+          "LOG_LEVEL": "The log level for the container. See {rlog} docs."
+        }
+      },
+      "properties": {
+        "containers": [
+          {
+            "name": "loader-runner",
+            "properties": {
+              "image": "[concat(variables('azurecontainerregistry'),'/factset_data_loader:latest')]",
+              "command": [
+                "tail", "-f", "/dev/null"
+              ],
+              "ports": [],
+              "resources": {
+                "requests": {
+                  "cpu": 4,
+                  "memoryInGB": 1
+                }
+              },
+              "environmentVariables": [
+                {
+                  "name": "R_DATABASE_USER",
+                  "secureValue": "[parameters('factset-database-user')]"
+                },
+                {
+                  "name": "R_DATABASE_PASSWORD",
+                  "secureValue": "[parameters('factset-database-password')]"
+                },
+                {
+                  "name": "DEPLOY_START_TIME",
+                  "value": "[parameters('starttime')]"
+                },
+                {
+                  "name": "LOG_LEVEL",
+                  "value": "DEBUG"
+                }
+              ],
+              "volumeMounts": [
+                {
+                  "name": "factset-loader",
+                  "mountPath": "/mnt/factset-loader"
+                }
+              ]
+            }
+          }
+        ],
+        "imageRegistryCredentials": [
+          {
+            "server": "[variables('azurecontainerregistry')]",
+            "identity": "[parameters('identity')]"
+          }
+        ],
+        "restartPolicy": "[parameters('restartPolicy')]",
+        "osType": "Linux",
+        "volumes": [
+          {
+            "name": "factset-loader",
+            "azureFile": {
+              "shareName": "factset-loader",
+              "readOnly": false,
+              "storageAccountName": "pactarawdata",
+              "storageAccountKey": "[parameters('rawdata-storageaccountkey')]"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {}
+}
