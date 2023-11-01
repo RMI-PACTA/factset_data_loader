@@ -83,6 +83,14 @@ az deployment group create --resource-group "$RESOURCEGROUP" --template-file azu
 
 ```
 
+Debugging:
+
+```sh
+
+az container exec --name "<CONTAINER GROUP NAME>" --container-name loader-runner --resource-group $RESOURCEGROUP --exec-command "/bin/bash"
+
+```
+
 To start a long-running process (to allow for attaching and debugging), add this to `properties` for the container:
 
 ```json

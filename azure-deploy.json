@@ -66,7 +66,11 @@
     }
   },
   "variables": {
-    "azurecontainerregistry": "transitionmonitordockerregistry.azurecr.io"
+    "azurecontainerregistry": "transitionmonitordockerregistry.azurecr.io",
+    "cpuCores": 1,
+    "memoryInGB": 1,
+    "factset-database-name": "FDS",
+    "factset-database-host": "localhost"
   },
   "functions": [],
   "resources": [
@@ -94,6 +98,37 @@
       "properties": {
         "containers": [
           {
+            "name": "postgres",
+            "properties": {
+              "image": "postgres:15-alpine",
+              "ports": [],
+              "resources": {
+                "requests": {
+                  "cpu": "[variables('cpuCores')]",
+                  "memoryInGB": "[variables('memoryInGB')]"
+                }
+              },
+              "environmentVariables": [
+                {
+                  "name": "POSTGRES_USER",
+                  "secureValue": "[parameters('factset-database-user')]"
+                },
+                {
+                  "name": "POSTGRES_PASSWORD",
+                  "secureValue": "[parameters('factset-database-password')]"
+                },
+                {
+                  "name": "POSTGRES_DB",
+                  "value": "[variables('factset-database-name')]"
+                },
+                {
+                  "name": "DEPLOY_START_TIME",
+                  "value": "[parameters('starttime')]"
+                }
+              ]
+            }
+          },
+          {
             "name": "loader-runner",
             "properties": {
               "image": "[concat(variables('azurecontainerregistry'),'/factset_data_loader:latest')]",
@@ -103,8 +138,8 @@
               "ports": [],
               "resources": {
                 "requests": {
-                  "cpu": 4,
-                  "memoryInGB": 1
+                  "cpu": "[variables('cpuCores')]",
+                  "memoryInGB": "[variables('memoryInGB')]"
                 }
               },
               "environmentVariables": [
@@ -115,6 +150,14 @@
                 {
                   "name": "R_DATABASE_PASSWORD",
                   "secureValue": "[parameters('factset-database-password')]"
+                },
+                {
+                  "name": "R_DATABASE_HOST",
+                  "value": "[variables('factset-database-host')]"
+                },
+                {
+                  "name": "R_DATABASE_NAME",
+                  "value": "[variables('factset-database-name')]"
                 },
                 {
                   "name": "DEPLOY_START_TIME",
@@ -129,6 +172,10 @@
                 {
                   "name": "factset-loader",
                   "mountPath": "/mnt/factset-loader"
+                },
+                {
+                  "name": "emptydir1",
+                  "mountPath": "/mnt/empty"
                 }
               ]
             }
@@ -143,6 +190,10 @@
         "restartPolicy": "[parameters('restartPolicy')]",
         "osType": "Linux",
         "volumes": [
+          {
+            "name": "emptydir1",
+            "emptyDir": {}
+          },
           {
             "name": "factset-loader",
             "azureFile": {
