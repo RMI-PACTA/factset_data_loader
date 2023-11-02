@@ -1,6 +1,7 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "0.0.4",
+
   "parameters": {
     "location": {
       "type": "string",
@@ -45,16 +46,16 @@
         "description": "The storage account key for the rawdata storage account."
       }
     },
-    "factset-database-user": {
-      "type": "securestring",
-      "metadata": {
-        "description": "username to connect to database"
-      }
-    },
-    "factset-database-password": {
+    "database-password": {
       "type": "securestring",
       "metadata": {
         "description": "password to connect to database"
+      }
+    },
+    "database-password-encrypted": {
+      "type": "securestring",
+      "metadata": {
+        "description": "password to connect to database, encrypted by FDSLoader64 (pull from config.xml)"
       }
     },
     "starttime": {
@@ -65,14 +66,21 @@
       }
     }
   },
+
   "variables": {
+    "FDSLoaderZipFilename": "FDSLoader-Linux-2.13.6.0.zip",
+    "PGDATABASE": "FDS",
+    "PGHOST": "localhost",
+    "PGUSER": "postgres",
     "azurecontainerregistry": "transitionmonitordockerregistry.azurecr.io",
-    "cpuCores": 1,
-    "memoryInGB": 1,
-    "factset-database-name": "FDS",
-    "factset-database-host": "localhost"
+    "machineCpuCores": 1,
+    "machineMemoryInGB": 1,
+    "mountPathFDSLoader": "/mnt/factset-loader",
+    "mountPathWorkingSpace": "/mnt/workingspace"
   },
+
   "functions": [],
+
   "resources": [
     {
       "type": "Microsoft.ContainerInstance/containerGroups",
@@ -85,16 +93,6 @@
           "[parameters('identity')]": {}
         }
       },
-      "metadata": {
-        "data-prep environmentVariables description": {
-          "R_DATABASE_USER": "The username for the database.",
-          "R_DATABASE_PASSWORD": "The password for the database.",
-          "DEPLOY_START_TIME": "The time the container was deployed.",
-          "R_CONFIG_ACTIVE": "The active config for the container.",
-          "R_CONFIG_FILE": "The config file for the container.",
-          "LOG_LEVEL": "The log level for the container. See {rlog} docs."
-        }
-      },
       "properties": {
         "containers": [
           {
@@ -104,26 +102,22 @@
               "ports": [],
               "resources": {
                 "requests": {
-                  "cpu": "[variables('cpuCores')]",
-                  "memoryInGB": "[variables('memoryInGB')]"
+                  "cpu": "[variables('machineCpuCores')]",
+                  "memoryInGB": "[variables('machineMemoryInGB')]"
                 }
               },
               "environmentVariables": [
                 {
                   "name": "POSTGRES_USER",
-                  "secureValue": "[parameters('factset-database-user')]"
+                  "value": "variables['PGUSER']"
                 },
                 {
                   "name": "POSTGRES_PASSWORD",
-                  "secureValue": "[parameters('factset-database-password')]"
+                  "secureValue": "[parameters('database-password')]"
                 },
                 {
                   "name": "POSTGRES_DB",
-                  "value": "[variables('factset-database-name')]"
-                },
-                {
-                  "name": "DEPLOY_START_TIME",
-                  "value": "[parameters('starttime')]"
+                  "value": "variables['PGDATABASE']"
                 }
               ]
             }
@@ -138,44 +132,68 @@
               "ports": [],
               "resources": {
                 "requests": {
-                  "cpu": "[variables('cpuCores')]",
-                  "memoryInGB": "[variables('memoryInGB')]"
+                  "cpu": "[variables('machineCpuCores')]",
+                  "memoryInGB": "[variables('machineMemoryInGB')]"
                 }
               },
               "environmentVariables": [
                 {
-                  "name": "R_DATABASE_USER",
-                  "secureValue": "[parameters('factset-database-user')]"
+                  "name": "PGUSER",
+                  "value": "[variables('PGUSER')]"
                 },
                 {
-                  "name": "R_DATABASE_PASSWORD",
-                  "secureValue": "[parameters('factset-database-password')]"
+                  "name": "PGPASSWORD",
+                  "secureValue": "[parameters('database-password')]"
                 },
                 {
-                  "name": "R_DATABASE_HOST",
-                  "value": "[variables('factset-database-host')]"
+                  "name": "PGPASSWORD_ENCRYPTED",
+                  "secureValue": "[parameters('database-password-encrypted')]"
                 },
                 {
-                  "name": "R_DATABASE_NAME",
-                  "value": "[variables('factset-database-name')]"
+                  "name": "PGHOST",
+                  "value": "[variables('PGHOST')]"
+                },
+                {
+                  "name": "PGDATABASE",
+                  "value": "[variables('PGDATABASE')]"
                 },
                 {
                   "name": "DEPLOY_START_TIME",
                   "value": "[parameters('starttime')]"
                 },
                 {
+                  "name": "MACHINE_CORES",
+                  "value": "[variables('machineCpuCores')]"
+                },
+                {
+                  "name": "WORKINGSPACEPATH",
+                  "value": "[variables('mountPathWorkingSpace')]"
+                },
+                {
                   "name": "LOG_LEVEL",
                   "value": "DEBUG"
+                },
+                {
+                  "name": "FDS_LOADER_PATH",
+                  "value": "/home/fdsrunner"
+                },
+                {
+                  "name": "FDS_LOADER_ZIP_FILENAME",
+                  "value": "variables('FDSLoaderZipFilename')"
+                },
+                {
+                  "name": "FDS_LOADER_SOURCE_PATH",
+                  "value": "variables('mountPathFDSLoader')"
                 }
               ],
               "volumeMounts": [
                 {
                   "name": "factset-loader",
-                  "mountPath": "/mnt/factset-loader"
+                  "mountPath": "[variables('mountPathFDSLoader')]"
                 },
                 {
-                  "name": "emptydir1",
-                  "mountPath": "/mnt/empty"
+                  "name": "workingspace",
+                  "mountPath": "[variables('mountPathWorkingSpace')]"
                 }
               ]
             }
@@ -191,7 +209,7 @@
         "osType": "Linux",
         "volumes": [
           {
-            "name": "emptydir1",
+            "name": "workingspace",
             "emptyDir": {}
           },
           {
