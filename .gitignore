@@ -1,4 +1,6 @@
 key.txt
-factset-loader/
+mounts/
 
 azure-deploy.parameters.json
+
+.env

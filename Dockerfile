@@ -10,14 +10,22 @@ RUN echo "deb http://archive.ubuntu.com/ubuntu/ focal-updates main" >> \
       odbc-postgresql=1:13.* \
       postgresql-client=14+* \
       unixodbc=2.3.* \
+      unzip=6.* \
       && rm -rf /var/lib/apt/lists/*
 
 # set up odbc and DSN
-COPY system/odbcinst.ini /etc/odbcinst.ini
-COPY system/DSN-template.ini /root/DSN-template.ini
-RUN odbcinst -i -s -f /root/DSN-template.ini
+COPY system/etc/odbcinst.ini /etc/odbcinst.ini
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN echo export LD_LIBRARY_PATH="$(dpkg-query -L odbc-postgresql | grep psqlodbcw.so | xargs dirname)":"$LD_LIBRARY_PATH" >> ~/.bashrc
 
-COPY system/run_data_loader.sh /usr/local/bin/run_data_loader
+COPY system/etc/ /usr/local/etc/
+COPY system/bin/ /usr/local/bin/
+
+RUN groupadd -r fdsrunner \
+      && useradd -r -g fdsrunner fdsrunner \
+      && mkdir -p /home/fdsrunner \
+      && chown -R fdsrunner /home/fdsrunner
+
+USER fdsrunner
+WORKDIR /home/fdsrunner
