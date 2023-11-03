@@ -2,18 +2,19 @@
 
 ## Prerequisites
 
-* Directory containing contents of FDSLoader download zip:
-  * `FDSLoader64` binary
-  * `cacert.pem`
-  * `config.xml`
-  * `key.txt` (See "Generating Key") below
+* Directory containing FDSLoader download zip and `key.txt` (See ["Generating Key"](#generating-key)) below
+* Empty directory to be used to contain files downloaded from FactSet.
 * Postgres Database
   * database named `FDS` (capitalization matters)
 
+> **NOTE:** This container has been tested with, and is targeting `FDSLoader64` version `2.13.6.0`
+
 ## Acquiring Loader Binaries
 
-In the FactSet Resource Library, find the resource titled "DataFeed Loader for Linux".
+In the [FactSet Resource Library](https://go.factset.com/company/resource-library), find the resource titled "[DataFeed Loader for Linux](https://open.factset.com/api/public/media/download/resources/documents/af0def52-791d-47b9-9147-efe2c02e9f60/FDSLoader-Linux-2.13.6.0.zip)".
 Note that this resource requires you to be logged in with your FactSet ID before downloading.
+
+You may also find it useful to have a copy of the [DataFeed Loader User Guide](https://open.factset.com/api/public/media/download/resources/documents/542ad4eb-4d38-4b0e-b8af-0892289bc67b/DataFeed%20Loader%20User%20Guide%202.13.6.0.zip) and [DataFeed Loader resources](https://open.factset.com/api/public/media/download/resources/documents/4bd1a761-05e3-425f-8813-4f3b6c3c6a7f/resources.zip) (also require login before downloading)
 
 ## Generating key
 
@@ -35,13 +36,38 @@ Counter: 0000000000000000001
 
 **Place `key.txt` in the same directory as the `FDSLoader64` executable.**
 
-## FDSLoader64 Setup
+## FDSLoader64 config
 
-If needed, run `./FDSLoader64 --setup` and respond to the prompts. Running `./FDSLoader64 --setup` again allows you to see you current configuration and alter specific properties.
+The `FDSLoader64` application stores an encrypted version of the password in the `config.xml` files, along with other application settings.
+If you already have this value, the container can handle placing it in the config file along with the rest of the settings as part of `prepare_FDSLoader.sh` if it is exposed to the system as an envvar (`$PGPASSWORD_ENCRYPTED`)
 
-Below is a listing of running with `--setup` flag a second time, with sensitive information replaced by `<REDACTED>`
+### Generating `$PGPASSWORD_ENCRYPTED`
 
-```text
+The most straightforward way to generate the encrypted password for insertion into the config file is to setup the `FDSLoader64` appliction, either in the docker container (as in example below) or on your local machine.
+Then extract the encrypted password form the config file and store safely elsewhere.
+
+An example of this process via the docker container:
+
+Start the docker container:
+
+```sh
+docker-compose run loader-runner bash
+```
+
+> **NOTE:** you will need to have the FDSLoader zip file mentioned [above](#acquiring-loader-binaries). 
+You will also need a complete `.env` file, including a dummy encrypted password (below shows examples from `example.env`). 
+
+Then in the container (interactive): 
+
+```sh
+prepare_FDSLoader.sh # extract FDSLoader.zip
+cd $FDS_LOADER_PATH # change to path with FDSLoader
+./FDSLoader64 --setup # run setup command
+```
+
+This will present a menu:
+
+```
 Here are details of your configuration. If you would like to change any of these settings, please press the corresponding number and press Enter.
 
      1. Download Only? No
@@ -49,18 +75,59 @@ Here are details of your configuration. If you would like to change any of these
      3. Database Name: FDS
      4. Data Source Name (DSN): FDSLoader
      5. Authentication Type: SQL Server
-     9. Loader Location: /mnt/factset-loader/FDSLoader
-    11. FactSet Username: <REDACTED>
-    12. FactSet Serial Number: <REDACTED>
+     9. Loader Location: /home/fdsrunner
+    11. FactSet Username: FOOUSER
+    12. FactSet Serial Number: 123456
     13. Set Proxy Information
-    14. Loader Parallelization Level: Very High
-    15. Loader download only location: [Not Set]
-    16. Cloud database? Yes
-    17. Database Server Name: pacta-factset.postgres.database.azure.com
+    14. Loader Parallelization Level: Very Low
+    15. Loader download only location: /mnt/workingspace
+    16. Cloud database? No
+    17. Database Server Name: db
     18. Database Port Number: 5432
-    19. Load executable path: /user/bin/psql
+    19. Load executable path: /usr/bin/psql
     22. Using Atomic Rebuild: Yes
+
+Enter line number to edit or quit:
 ```
+
+**Enter `5`** (for Authentication Type), which will bring up a series of prompts.
+
+```
+What is the database User Name? [postgres]:
+```
+
+Enter any value you wish here (does not need to be actual username).
+
+```
+Enter the database password (will not be shown on screen):
+```
+
+Enter the database password (application accepts copy-paste, if your terminal supports it).
+
+```
+Re-enter the database password (will not be shown on screen):
+```
+
+Re-enter the password, and then you are free to enter `quit` (note: `q` is not sufficent) to return the the bash shell.
+
+From here, you can inspect the config file by migrating it out of the container (via mounts) or a simple:
+
+```sh
+cat config.xml
+```
+
+The relevant xml entry is `<pass>` (simplified config below)
+
+```xml
+<data>
+  <database>
+    <pass>3bf147a8df803c95261f64b154b336ea</pass>
+    <user>foo</user>
+  </database>
+</data>
+```
+
+> **NOTE:** The password used to generate this example is `1234`, if you wish to confirm results on your own system.
 
 ## Deploy
 
