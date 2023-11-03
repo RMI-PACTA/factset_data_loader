@@ -7,6 +7,7 @@ RUN echo "deb http://archive.ubuntu.com/ubuntu/ focal-updates main" >> \
       libexpat1=2.4.* \
       libldap-2.4-2=2.4.* \
       libnss3=2:3.68.* \
+      netcat=1.* \
       odbc-postgresql=1:13.* \
       postgresql-client=14+* \
       unixodbc=2.3.* \
