@@ -182,7 +182,13 @@ az deployment group create --resource-group "$RESOURCEGROUP" --template-file azu
 
 ```
 
-Debugging:
+### Tailing logs
+
+```sh
+az container logs --resource-group "$RESOURCEGROUP" --name <CONTAINER GROUP NAME> --container-name loader-runner --follow
+```
+
+### Debugging
 
 ```sh
 
