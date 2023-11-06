@@ -16,7 +16,6 @@
 Many behaviors of this container are controlled via environment variables.
 During local development, these can be set via `.env` which is read by docker-compose, or set as part of `azure-deploy.json` for cloud deployments.
 
-
 * `$DEPLOY_START_TIME`: UTC timestamp used to distinguish exported datasets.
 * `$FACTSET_SERIAL`: Serial number for FactSet account, provided by FactSet.
 * `$FACTSET_USER`: Username for FactSet account, provided by FactSet.
@@ -30,7 +29,6 @@ During local development, these can be set via `.env` which is read by docker-co
 * `$PGPASSWORD_ENCRYPTED`: `$PGPASSWORD` encrypted by `FDSLoader64` application. See [Generating `$PGPASSWORD_ENCRYPTED`](#generating-pgpassword_encrypted) for more instructions.
 * `$PGUSER`: Username for PostgreSQL superuser
 * `$WORKINGSPACEPATH`: Path to empy directory used for downloading data file from FactSet. This path should have available space approximately to `16 Gb * $MACHINE_CORES`.
-
 
 ## Acquiring Loader Binaries
 
@@ -77,10 +75,10 @@ Start the docker container:
 docker-compose run loader-runner bash
 ```
 
-> **NOTE:** you will need to have the FDSLoader zip file mentioned [above](#acquiring-loader-binaries). 
-You will also need a complete `.env` file, including a dummy encrypted password (below shows examples from `example.env`). 
+> **NOTE:** you will need to have the FDSLoader zip file mentioned [above](#acquiring-loader-binaries).
+You will also need a complete `.env` file, including a dummy encrypted password (below shows examples from `example.env`).
 
-Then in the container (interactive): 
+Then in the container (interactive):
 
 ```sh
 prepare_FDSLoader.sh # extract FDSLoader.zip
@@ -90,7 +88,7 @@ cd $FDS_LOADER_PATH # change to path with FDSLoader
 
 This will present a menu:
 
-```
+```text
 Here are details of your configuration. If you would like to change any of these settings, please press the corresponding number and press Enter.
 
      1. Download Only? No
@@ -115,19 +113,19 @@ Enter line number to edit or quit:
 
 **Enter `5`** (for Authentication Type), which will bring up a series of prompts.
 
-```
+```text
 What is the database User Name? [postgres]:
 ```
 
 Enter any value you wish here (does not need to be actual username).
 
-```
+```text
 Enter the database password (will not be shown on screen):
 ```
 
 Enter the database password (application accepts copy-paste, if your terminal supports it).
 
-```
+```text
 Re-enter the database password (will not be shown on screen):
 ```
 

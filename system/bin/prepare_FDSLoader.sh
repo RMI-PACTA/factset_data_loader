@@ -100,6 +100,10 @@ cp "$fds_loader_zip_source" "$fds_loader_zip_destination"
 unzip -q -o "$fds_loader_zip_destination" -d "$FDS_LOADER_PATH"
 
 echo "INFO: Preparing config file"
+fds_loader_binary="$FDS_LOADER_PATH/FDSLoader64" 
+key_file="$FDS_LOADER_PATH/key.txt"
+config_file="$FDS_LOADER_PATH/config.xml"
+
 
 # Using pipe rather than slash for sed separator, because some of the
 # substitutions are paths
@@ -113,6 +117,31 @@ sed \
   -e "s|{FACTSET_USER}|$FACTSET_USER|g" \
   -e "s|{LOCAL_BASEDIR}|$FDS_LOADER_PATH|g" \
   -e "s|{MAX_PARALLEL_LIMIT}|$MACHINE_CORES|g" \
-  "$config_template" > "$FDS_LOADER_PATH/config.xml"
+  "$config_template" > "$config_file"
+
+echo "INFO: Symlinking key.txt"
+ln -sF "$FDS_LOADER_SOURCE_PATH/key.txt" "$key_file"
+
+echo "INFO: checking expected files"
+
+if [ ! -x "$fds_loader_binary" ]; then
+  echo "ERROR: FDSLoader binary not found at $fds_loader_binary or is not executable."
+  expected_fail=1
+fi
+
+if [ ! -f "$key_file" ]; then
+  echo "ERROR: Key file not found at $key_file"
+  expected_fail=1
+fi
+
+if [ ! -f "$config_file" ]; then
+  echo "ERROR: Config file not found at $config_file"
+  expected_fail=1
+fi
+
+if [ -n "$expected_fail" ]; then
+  echo "One or more required files or directories do not exist."
+  exit 1
+fi
 
 echo "INFO: FDSLoader setup and configured."

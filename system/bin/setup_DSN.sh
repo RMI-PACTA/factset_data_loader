@@ -76,9 +76,10 @@ echo "INFO: DSN installation complete."
 # running wait-for to wait for database to start up before attempting to connect
 echo "INFO: Waiting for database port to be available"
 # using if ! cmd to test for failure. See: https://www.shellcheck.net/wiki/SC2181
-if ! wait-for.sh $PGHOST:5432 -t 120; then
+if ! wait-for.sh "$PGHOST:5432" -t 120; then
+  exit_code="$?"
   echo "ERROR: Open port not found at $PGHOST:5432"
-  exit 1
+  exit "$exit_code"
 fi
 
 echo "INFO: Checking Database connection"
@@ -88,9 +89,10 @@ if ! catalog_names=$(
   echo "SELECT table_catalog, count(*) FROM information_schema.tables GROUP BY table_catalog;" | \
     isql -v -b -d: FDSLoader "$PGUSER" "$PGPASSWORD"
 ); then
+  exit_code="$?"
   echo "ERROR: Database connection failed. isql output follows:"
   echo "$catalog_names"
-  exit 1
+  exit "$exit_code"
 fi
 
 echo "INFO: Database connection confirmed"
