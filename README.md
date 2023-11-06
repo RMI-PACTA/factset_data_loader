@@ -150,6 +150,17 @@ The relevant xml entry is `<pass>` (simplified config below)
 
 > **NOTE:** The password used to generate this example is `1234`, if you wish to confirm results on your own system.
 
+## Build
+
+```sh
+# login to docker registry
+az acr login -n transitionmonitordockerregistry
+# build image
+docker build . -t transitionmonitordockerregistry.azurecr.io/factset_data_loader
+# push to registry
+docker push transitionmonitordockerregistry.azurecr.io/factset_data_loader:latest
+```
+
 ## Deploy
 
 ```sh

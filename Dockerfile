@@ -30,3 +30,5 @@ RUN groupadd -r fdsrunner \
 
 USER fdsrunner
 WORKDIR /home/fdsrunner
+
+CMD ["run_data_loader.sh"]

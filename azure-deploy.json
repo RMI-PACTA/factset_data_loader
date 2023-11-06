@@ -58,6 +58,18 @@
         "description": "password to connect to database, encrypted by FDSLoader64 (pull from config.xml)"
       }
     },
+    "factset-serial": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Serial Number provided by FactSet"
+      }
+    },
+    "factset-username": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Username provided by FactSet"
+      }
+    },
     "starttime": {
       "type": "string",
       "defaultValue": "[utcNow()]",
@@ -76,7 +88,8 @@
     "machineCpuCores": 1,
     "machineMemoryInGB": 1,
     "mountPathFDSLoader": "/mnt/factset-loader",
-    "mountPathWorkingSpace": "/mnt/workingspace"
+    "mountPathWorkingSpace": "/mnt/workingspace",
+    "mountPathPGDATA": "/var/lib/postgresql/data"
   },
 
   "functions": [],
@@ -98,7 +111,7 @@
           {
             "name": "postgres",
             "properties": {
-              "image": "postgres:15-alpine",
+              "image": "postgres:14-alpine",
               "ports": [],
               "resources": {
                 "requests": {
@@ -109,15 +122,25 @@
               "environmentVariables": [
                 {
                   "name": "POSTGRES_USER",
-                  "value": "variables['PGUSER']"
+                  "value": "[variables('PGUSER')]"
                 },
                 {
                   "name": "POSTGRES_PASSWORD",
                   "secureValue": "[parameters('database-password')]"
                 },
                 {
+                  "name": "PGDATA",
+                  "value": "[variables('mountPathPGDATA')]"
+                },
+                {
                   "name": "POSTGRES_DB",
-                  "value": "variables['PGDATABASE']"
+                  "value": "[variables('PGDATABASE')]"
+                }
+              ],
+              "volumeMounts": [
+                {
+                  "name": "pgdata-empty",
+                  "mountPath": "[variables('mountPathPGDATA')]"
                 }
               ]
             }
@@ -126,9 +149,6 @@
             "name": "loader-runner",
             "properties": {
               "image": "[concat(variables('azurecontainerregistry'),'/factset_data_loader:latest')]",
-              "command": [
-                "tail", "-f", "/dev/null"
-              ],
               "ports": [],
               "resources": {
                 "requests": {
@@ -158,6 +178,14 @@
                   "value": "[variables('PGDATABASE')]"
                 },
                 {
+                  "name": "FACTSET_USER",
+                  "value": "[parameters('factset-username')]"
+                },
+                {
+                  "name": "FACTSET_SERIAL",
+                  "secureValue": "[parameters('factset-serial')]"
+                },
+                {
                   "name": "DEPLOY_START_TIME",
                   "value": "[parameters('starttime')]"
                 },
@@ -179,11 +207,11 @@
                 },
                 {
                   "name": "FDS_LOADER_ZIP_FILENAME",
-                  "value": "variables('FDSLoaderZipFilename')"
+                  "value": "[variables('FDSLoaderZipFilename')]"
                 },
                 {
                   "name": "FDS_LOADER_SOURCE_PATH",
-                  "value": "variables('mountPathFDSLoader')"
+                  "value": "[variables('mountPathFDSLoader')]"
                 }
               ],
               "volumeMounts": [
@@ -210,6 +238,10 @@
         "volumes": [
           {
             "name": "workingspace",
+            "emptyDir": {}
+          },
+          {
+            "name": "pgdata-empty",
             "emptyDir": {}
           },
           {

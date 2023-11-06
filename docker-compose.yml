@@ -31,7 +31,7 @@ services:
     stdin_open: true
     command: ["bash"]
   db:
-    image: postgres:15-alpine
+    image: postgres:14-alpine
     # hostname: pacta-factset.example.com
     hostname: pacta-factset.postgres.database.azure.com
     environment:
