@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-  "contentVersion": "0.0.4",
+  "contentVersion": "0.0.0.5",
 
   "parameters": {
     "location": {
@@ -82,19 +82,55 @@
   "variables": {
     "FDSLoaderZipFilename": "FDSLoader-Linux-2.13.6.0.zip",
     "PGDATABASE": "FDS",
-    "PGHOST": "localhost",
+    "PGHOST": "[concat(variables('dbServerName'), '.postgres.database.azure.com')]",
     "PGUSER": "postgres",
     "azurecontainerregistry": "transitionmonitordockerregistry.azurecr.io",
-    "machineCpuCores": 1,
-    "machineMemoryInGB": 1,
+    "dbAvailabilityZone": "1",
+    "dbHAMode":"Disabled",
+    "dbInstanceType": "Standard_D2ds_v4",
+    "dbServerEdition": "GeneralPurpose",
+    "dbServerName": "[concat(parameters('containerGroupName'), '-postgres')]",
+    "dbSkuSizeGB": 128,
+    "machineCpuCores": 2,
+    "machineMemoryInGB": 8,
     "mountPathFDSLoader": "/mnt/factset-loader",
     "mountPathWorkingSpace": "/mnt/workingspace",
-    "mountPathPGDATA": "/var/lib/postgresql/data"
+    "postgresVersion": "14"
   },
 
   "functions": [],
 
   "resources": [
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+      "apiVersion": "2021-06-01",
+      "name": "[variables('dbServerName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[variables('dbInstanceType')]",
+        "tier": "[variables('dbServerEdition')]"
+      },
+      "properties": {
+        "version": "[variables('postgresVersion')]",
+        "administratorLogin": "[variables('PGUSER')]",
+        "administratorLoginPassword": "[parameters('database-password')]",
+        "network": {
+          "delegatedSubnetResourceId": "[json('null')]",
+          "privateDnsZoneArmResourceId": "[json('null')]"
+        },
+        "highAvailability": {
+          "mode": "[variables('dbHAMode')]"
+        },
+        "storage": {
+          "storageSizeGB": "[variables('dbSkuSizeGB')]"
+        },
+        "backup": {
+          "backupRetentionDays": 7,
+          "geoRedundantBackup": "Disabled"
+        },
+        "availabilityZone": "[variables('dbAvailabilityZone')]"
+      }
+    },
     {
       "type": "Microsoft.ContainerInstance/containerGroups",
       "apiVersion": "2021-09-01",
@@ -109,46 +145,12 @@
       "properties": {
         "containers": [
           {
-            "name": "postgres",
-            "properties": {
-              "image": "postgres:14-alpine",
-              "ports": [],
-              "resources": {
-                "requests": {
-                  "cpu": "[variables('machineCpuCores')]",
-                  "memoryInGB": "[variables('machineMemoryInGB')]"
-                }
-              },
-              "environmentVariables": [
-                {
-                  "name": "POSTGRES_USER",
-                  "value": "[variables('PGUSER')]"
-                },
-                {
-                  "name": "POSTGRES_PASSWORD",
-                  "secureValue": "[parameters('database-password')]"
-                },
-                {
-                  "name": "PGDATA",
-                  "value": "[variables('mountPathPGDATA')]"
-                },
-                {
-                  "name": "POSTGRES_DB",
-                  "value": "[variables('PGDATABASE')]"
-                }
-              ],
-              "volumeMounts": [
-                {
-                  "name": "pgdata-empty",
-                  "mountPath": "[variables('mountPathPGDATA')]"
-                }
-              ]
-            }
-          },
-          {
             "name": "loader-runner",
             "properties": {
               "image": "[concat(variables('azurecontainerregistry'),'/factset_data_loader:latest')]",
+              "command": [
+                "tail", "-f", "/dev/null"
+              ],
               "ports": [],
               "resources": {
                 "requests": {
@@ -238,10 +240,6 @@
         "volumes": [
           {
             "name": "workingspace",
-            "emptyDir": {}
-          },
-          {
-            "name": "pgdata-empty",
             "emptyDir": {}
           },
           {
