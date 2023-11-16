@@ -122,6 +122,7 @@
           "mode": "[variables('dbHAMode')]"
         },
         "storage": {
+          "autoGrow": "Enabled",
           "storageSizeGB": "[variables('dbSkuSizeGB')]"
         },
         "backup": {
@@ -169,9 +170,6 @@
             "name": "loader-runner",
             "properties": {
               "image": "[concat(variables('azurecontainerregistry'),'/factset_data_loader:latest')]",
-              "command": [
-                "tail", "-f", "/dev/null"
-              ],
               "ports": [],
               "resources": {
                 "requests": {
@@ -273,7 +271,10 @@
             }
           }
         ]
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('dbServerName'))]"
+      ]
     }
   ],
   "outputs": {}
