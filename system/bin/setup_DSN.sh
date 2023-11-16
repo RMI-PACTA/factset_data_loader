@@ -79,6 +79,7 @@ echo "INFO: Waiting for database port to be available"
 if ! wait-for.sh "$PGHOST:5432" -t 120; then
   exit_code="$?"
   echo "ERROR: Open port not found at $PGHOST:5432"
+  echo "Exiting. (exit code $exit_code)"
   exit "$exit_code"
 fi
 
@@ -92,6 +93,7 @@ if ! catalog_names=$(
   exit_code="$?"
   echo "ERROR: Database connection failed. isql output follows:"
   echo "$catalog_names"
+  echo "Exiting. (exit code $exit_code)"
   exit "$exit_code"
 fi
 

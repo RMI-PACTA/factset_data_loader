@@ -6,6 +6,7 @@
 if ! setup_DSN.sh; then
   exit_code="$?"
   echo "ERROR: DSN Setup script did not run cleanly"
+  echo "Exiting. (exit code $exit_code)"
   exit "$exit_code"
 fi
 
@@ -15,6 +16,7 @@ fi
 if ! prepare_FDSLoader.sh; then
   exit_code="$?"
   echo "ERROR: FDSLoader setup script did not run cleanly"
+  echo "Exiting. (exit code $exit_code)"
   exit "$exit_code"
 fi
 
@@ -78,6 +80,7 @@ echo "INFO: Running FDSLoader in test mode"
 if ! "$fds_loader_binary" --test 2>&1 | tee "$test_results"; then
   exit_code="$?"
   echo "ERROR: FDSLoader did not run cleanly"
+  echo "Exiting. (exit code $exit_code)"
   exit "$exit_code"
 fi
 
