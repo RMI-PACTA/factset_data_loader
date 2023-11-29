@@ -2,19 +2,19 @@
 
 ## Prerequisites
 
-* Directory to be mounted to container, containing:
+* Directory to mount to container, containing:
   * FDSLoader download zip (See ["Acquiring Loader Binaries"](#acquiring-loader-binaries) below)
   * `key.txt` (See ["Generating Key"](#generating-key) below)
-* Empty directory to be used to contain files downloaded from FactSet.
+* Empty directory to use to contain files downloaded from FactSet.
 * Postgres Database
   * database named `FDS` (capitalization matters)
 
-> **NOTE:** This container has been tested with, and is targeting `FDSLoader64` version `2.13.6.0`
+> **NOTE:** This container is targeting `FDSLoader64` version `2.13.6.0`
 
 ### Environment Variables (envvars)
 
-Many behaviors of this container are controlled via environment variables.
-During local development, these can be set via `.env` which is read by docker-compose, or set as part of `azure-deploy.json` for cloud deployments.
+Environment variable control the behavior of this container.
+During local development, these can are via `.env` which docker-compose reads, or set as part of `azure-deploy.json` for cloud deployments.
 
 * `$DEPLOY_START_TIME`: UTC timestamp used to distinguish exported datasets.
 * `$FACTSET_SERIAL`: Serial number for FactSet account, provided by FactSet.
@@ -28,12 +28,12 @@ During local development, these can be set via `.env` which is read by docker-co
 * `$PGPASSWORD`: Password for PostgreSQL database.
 * `$PGPASSWORD_ENCRYPTED`: `$PGPASSWORD` encrypted by `FDSLoader64` application. See [Generating `$PGPASSWORD_ENCRYPTED`](#generating-pgpassword_encrypted) for more instructions.
 * `$PGUSER`: Username for PostgreSQL superuser
-* `$WORKINGSPACEPATH`: Path to empy directory used for downloading data file from FactSet. This path should have available space approximately to `16 Gb * $MACHINE_CORES`.
+* `$WORKINGSPACEPATH`: Path to empy directory used for downloading data file from FactSet. This path should have available space equal to `16 Gb * $MACHINE_CORES` (suggested by FactSet documentation).
 
 ## Acquiring Loader Binaries
 
 In the [FactSet Resource Library](https://go.factset.com/company/resource-library), find the resource titled "[DataFeed Loader for Linux](https://open.factset.com/api/public/media/download/resources/documents/af0def52-791d-47b9-9147-efe2c02e9f60/FDSLoader-Linux-2.13.6.0.zip)".
-Note that this resource requires you to be logged in with your FactSet ID before downloading.
+Note that this resource requires you to log in with your FactSet ID before downloading.
 
 You may also find it useful to have a copy of the [DataFeed Loader User Guide](https://open.factset.com/api/public/media/download/resources/documents/542ad4eb-4d38-4b0e-b8af-0892289bc67b/DataFeed%20Loader%20User%20Guide%202.13.6.0.zip) and [DataFeed Loader resources](https://open.factset.com/api/public/media/download/resources/documents/4bd1a761-05e3-425f-8813-4f3b6c3c6a7f/resources.zip) (also require login before downloading)
 
@@ -45,7 +45,7 @@ and copy contents to `key.txt` in the same directory as the `FDSLoader64` execut
 1. Log in to page (including MFA)
 2. Enter Serial number for account
 3. Select "PROD" radio select (not "BETA")
-4. Ensure "Legacy" checkbox is checked.
+4. Check "Legacy" checkbox.
 
 Example:
 
@@ -60,12 +60,12 @@ Counter: 0000000000000000001
 ## FDSLoader64 config
 
 The `FDSLoader64` application stores an encrypted version of the password in the `config.xml` files, along with other application settings.
-If you already have this value, the container can handle placing it in the config file along with the rest of the settings as part of `prepare_FDSLoader.sh` if it is exposed to the system as an envvar (`$PGPASSWORD_ENCRYPTED`)
+If you already have this value, the container can handle placing it in the config file along with the rest of the settings as part of `prepare_FDSLoader.sh` and expose it to the system as an envvar (`$PGPASSWORD_ENCRYPTED`)
 
 ### Generating `$PGPASSWORD_ENCRYPTED`
 
 The most straightforward way to generate the encrypted password for insertion into the config file is to setup the `FDSLoader64` appliction, either in the docker container (as in example below) or on your local machine.
-Then extract the encrypted password form the config file and store safely elsewhere.
+Then extract the encrypted password form the config file and store elsewhere.
 
 An example of this process via the docker container:
 
@@ -129,7 +129,7 @@ Enter the database password (application accepts copy-paste, if your terminal su
 Re-enter the database password (will not be shown on screen):
 ```
 
-Re-enter the password, and then you are free to enter `quit` (note: `q` is not sufficent) to return the the bash shell.
+Re-enter the password, and then you are free to enter `quit` (note: `q` is not sufficent) to return the bash shell.
 
 From here, you can inspect the config file by migrating it out of the container (via mounts) or a simple:
 
