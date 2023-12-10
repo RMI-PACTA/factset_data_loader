@@ -46,11 +46,6 @@ if [ -z "$PGHOST" ]; then
     envvar_fail=1
 fi
 
-if [ -z "$PGPASSWORD_ENCRYPTED" ]; then
-    echo "ERROR: PGPASSWORD_ENCRYPTED is not set."
-    envvar_fail=1
-fi
-
 if [ -z "$PGUSER" ]; then
     echo "ERROR: PGUSER is not set."
     envvar_fail=1
@@ -112,12 +107,14 @@ sed \
   -e "s|{DATABASE_SERVER}|$PGHOST|g" \
   -e "s|{DATABASE_USER}|$PGUSER|g" \
   -e "s|{DOWNLOAD_BASEDIR}|$WORKINGSPACEPATH|g" \
-  -e "s|{ENCRYPTED_PASS}|$PGPASSWORD_ENCRYPTED|g" \
   -e "s|{FACTSET_SERIAL}|$FACTSET_SERIAL|g" \
   -e "s|{FACTSET_USER}|$FACTSET_USER|g" \
   -e "s|{LOCAL_BASEDIR}|$FDS_LOADER_PATH|g" \
   -e "s|{MAX_PARALLEL_LIMIT}|$MACHINE_CORES|g" \
   "$config_template" > "$config_file"
+
+echo "INFO: Updating config with database password"
+$fds_loader_binary --update-password --instance db --pwd $PGPASSWORD
 
 echo "INFO: Symlinking key.txt"
 ln -sF "$FDS_LOADER_SOURCE_PATH/key.txt" "$key_file"

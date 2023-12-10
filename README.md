@@ -26,7 +26,6 @@ During local development, these can are via `.env` which docker-compose reads, o
 * `$PGDATABASE`: Database name to load data into. Default `FDS`
 * `$PGHOST`: Hostname for PostgreSQL server. Default: `db` for local/docker, `localhost` for Azure deployment.
 * `$PGPASSWORD`: Password for PostgreSQL database.
-* `$PGPASSWORD_ENCRYPTED`: `$PGPASSWORD` encrypted by `FDSLoader64` application. See [Generating `$PGPASSWORD_ENCRYPTED`](#generating-pgpassword_encrypted) for more instructions.
 * `$PGUSER`: Username for PostgreSQL superuser
 * `$WORKINGSPACEPATH`: Path to empy directory used for downloading data file from FactSet. This path should have available space equal to `16 Gb * $MACHINE_CORES` (suggested by FactSet documentation).
 
@@ -56,99 +55,6 @@ Counter: 0000000000000000001
 ```
 
 **Place `key.txt` in the same directory as the `FDSLoader64` executable.**
-
-## FDSLoader64 config
-
-The `FDSLoader64` application stores an encrypted version of the password in the `config.xml` files, along with other application settings.
-If you already have this value, the container can handle placing it in the config file along with the rest of the settings as part of `prepare_FDSLoader.sh` and expose it to the system as an envvar (`$PGPASSWORD_ENCRYPTED`)
-
-### Generating `$PGPASSWORD_ENCRYPTED`
-
-The most straightforward way to generate the encrypted password for insertion into the config file is to setup the `FDSLoader64` appliction, either in the docker container (as in example below) or on your local machine.
-Then extract the encrypted password form the config file and store elsewhere.
-
-An example of this process via the docker container:
-
-Start the docker container:
-
-```sh
-docker-compose run loader-runner bash
-```
-
-> **NOTE:** you will need to have the FDSLoader zip file mentioned [above](#acquiring-loader-binaries).
-You will also need a complete `.env` file, including a dummy encrypted password (below shows examples from `example.env`).
-
-Then in the container (interactive):
-
-```sh
-prepare_FDSLoader.sh # extract FDSLoader.zip
-cd $FDS_LOADER_PATH # change to path with FDSLoader
-./FDSLoader64 --setup # run setup command
-```
-
-This will present a menu:
-
-```text
-Here are details of your configuration. If you would like to change any of these settings, please press the corresponding number and press Enter.
-
-     1. Download Only? No
-     2. Database Type: PostgreSQL
-     3. Database Name: FDS
-     4. Data Source Name (DSN): FDSLoader
-     5. Authentication Type: SQL Server
-     9. Loader Location: /home/fdsrunner
-    11. FactSet Username: FOOUSER
-    12. FactSet Serial Number: 123456
-    13. Set Proxy Information
-    14. Loader Parallelization Level: Very Low
-    15. Loader download only location: /mnt/workingspace
-    16. Cloud database? No
-    17. Database Server Name: db
-    18. Database Port Number: 5432
-    19. Load executable path: /usr/bin/psql
-    22. Using Atomic Rebuild: Yes
-
-Enter line number to edit or quit:
-```
-
-**Enter `5`** (for Authentication Type), which will bring up a series of prompts.
-
-```text
-What is the database User Name? [postgres]:
-```
-
-Enter any value you wish here (does not need to be actual username).
-
-```text
-Enter the database password (will not be shown on screen):
-```
-
-Enter the database password (application accepts copy-paste, if your terminal supports it).
-
-```text
-Re-enter the database password (will not be shown on screen):
-```
-
-Re-enter the password, and then you are free to enter `quit` (note: `q` is not sufficent) to return the bash shell.
-
-From here, you can inspect the config file by migrating it out of the container (via mounts) or a simple:
-
-```sh
-cat config.xml
-```
-
-The relevant xml entry is `<pass>` (simplified config below)
-
-```xml
-<data>
-  <database>
-    <pass>3bf147a8df803c95261f64b154b336ea</pass>
-    <user>foo</user>
-  </database>
-</data>
-```
-
-> **NOTE:** The password used to generate this example is `1234`, if you wish to confirm results on your own system.
 
 ## Build
 

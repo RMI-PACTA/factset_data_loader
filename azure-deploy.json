@@ -46,12 +46,6 @@
         "description": "password to connect to database"
       }
     },
-    "database-password-encrypted": {
-      "type": "securestring",
-      "metadata": {
-        "description": "password to connect to database, encrypted by FDSLoader64 (pull from config.xml)"
-      }
-    },
     "factset-serial": {
       "type": "securestring",
       "metadata": {
@@ -164,6 +158,9 @@
             "name": "loader-runner",
             "properties": {
               "image": "[concat(variables('azurecontainerregistry'),'/factset_data_loader:latest')]",
+              "command": [
+                "tail", "-f", "/dev/null"
+              ],
               "ports": [],
               "resources": {
                 "requests": {
@@ -179,10 +176,6 @@
                 {
                   "name": "PGPASSWORD",
                   "secureValue": "[parameters('database-password')]"
-                },
-                {
-                  "name": "PGPASSWORD_ENCRYPTED",
-                  "secureValue": "[parameters('database-password-encrypted')]"
                 },
                 {
                   "name": "PGHOST",
