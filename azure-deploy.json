@@ -16,12 +16,6 @@
         "description": "The ID of the user assigned identity to use for the container group."
       }
     },
-    "serviceprincipal": {
-      "type": "string",
-      "metadata": {
-        "description": "The ID of the service principal to use for the container group."
-      }
-    },
     "containerGroupName": {
       "type": "string",
       "metadata": {
