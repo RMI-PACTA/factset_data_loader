@@ -58,10 +58,3 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=min
           no-cache-filters: install-pacta
-
-  check-system-dependencies:
-    name: "Check System Dependencies"
-    needs: docker
-    uses: ./.github/workflows/check-R-sysdeps.yml
-    with:
-      image: ${{ needs.docker.outputs.full-image-name }}
