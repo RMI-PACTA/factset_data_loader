@@ -82,6 +82,14 @@ fi
 
 echo "INFO: FDSLoader test run completed successfully"
 
+echo "INFO: Restoring database from backup"
+if ! prepare_FDSLoader.sh; then
+  exit_code="$?"
+  echo "ERROR: FDSLoader setup script did not run cleanly"
+  echo "Exiting. (exit code $exit_code)"
+  exit "$exit_code"
+fi
+
 # Run FDSLoader for real
 echo "INFO: Running FDSLoader in production mode"
 "$fds_loader_binary"
