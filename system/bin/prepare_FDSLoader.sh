@@ -41,6 +41,11 @@ if [ -z "$PGDATABASE" ]; then
     envvar_fail=1
 fi
 
+if [ -z "$PGPASSWORD" ]; then
+    echo "ERROR: PGPASSWORD is not set."
+    envvar_fail=1
+fi
+
 if [ -z "$PGHOST" ]; then
     echo "ERROR: PGHOST is not set."
     envvar_fail=1

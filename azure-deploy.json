@@ -158,9 +158,6 @@
             "name": "loader-runner",
             "properties": {
               "image": "[concat(variables('azurecontainerregistry'),'/factset_data_loader:latest')]",
-              "command": [
-                "tail", "-f", "/dev/null"
-              ],
               "ports": [],
               "resources": {
                 "requests": {
