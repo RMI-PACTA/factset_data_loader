@@ -157,7 +157,7 @@
           {
             "name": "loader-runner",
             "properties": {
-              "image": "[concat(variables('containerregistry'),'/factset_data_loader:latest')]",
+              "image": "[concat(variables('containerregistry'),'/factset_data_loader:pr2')]",
               "command": [
                 "tail", "-f", "/dev/null"
               ],
