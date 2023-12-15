@@ -72,7 +72,7 @@
     "PGDATABASE": "FDS",
     "PGHOST": "[concat(variables('dbServerName'), '.postgres.database.azure.com')]",
     "PGUSER": "postgres",
-    "azurecontainerregistry": "transitionmonitordockerregistry.azurecr.io",
+    "containerregistry": "ghcr.io/rmi-pacta",
     "dbAvailabilityZone": "1",
     "dbHAMode":"Disabled",
     "dbInstanceType": "Standard_D2ds_v4",
@@ -80,7 +80,7 @@
     "dbServerName": "[concat(parameters('containerGroupName'), '-postgres')]",
     "dbSkuSizeGB": 128,
     "machineCpuCores": 2,
-    "machineMemoryInGB": 8,
+    "machineMemoryInGB": 16,
     "mountPathFDSLoader": "/mnt/factset-loader",
     "mountPathWorkingSpace": "/mnt/workingspace",
     "postgresVersion": "14"
@@ -157,7 +157,10 @@
           {
             "name": "loader-runner",
             "properties": {
-              "image": "[concat(variables('azurecontainerregistry'),'/factset_data_loader:latest')]",
+              "image": "[concat(variables('containerregistry'),'/factset_data_loader:latest')]",
+              "command": [
+                "tail", "-f", "/dev/null"
+              ],
               "ports": [],
               "resources": {
                 "requests": {
@@ -230,12 +233,6 @@
                 }
               ]
             }
-          }
-        ],
-        "imageRegistryCredentials": [
-          {
-            "server": "[variables('azurecontainerregistry')]",
-            "identity": "[parameters('identity')]"
           }
         ],
         "restartPolicy": "[parameters('restartPolicy')]",
