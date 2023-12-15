@@ -62,6 +62,25 @@ if [ -n "$file_fail" ]; then
   exit 1
 fi
 
+if [ -n "$RESTORE_DB" ]; then
+  echo "INFO: Restoring database from backup"
+  if ! backup_restore.sh; then
+    exit_code="$?"
+    echo "ERROR: Database did not restore cleanly"
+    echo "Exiting. (exit code $exit_code)"
+    exit "$exit_code"
+  fi
+fi
+
+echo "INFO: Restoring database from backup"
+if ! prepare_FDSLoader.sh; then
+  exit_code="$?"
+  echo "ERROR: FDSLoader setup script did not run cleanly"
+  echo "Exiting. (exit code $exit_code)"
+  exit "$exit_code"
+fi
+
+
 test_results="$FDS_LOADER_PATH/test_results.txt"
 
 ## Run FDSLoader with tests
@@ -78,31 +97,44 @@ test_errors=$(grep -c "ERROR" "$test_results")
 if [ "$test_errors" -gt 0 ]; then
   echo "ERROR: FDSLoader test run completed with errors"
   exit 1
-fi
-
-echo "INFO: FDSLoader test run completed successfully"
-
-echo "INFO: Restoring database from backup"
-if ! prepare_FDSLoader.sh; then
-  exit_code="$?"
-  echo "ERROR: FDSLoader setup script did not run cleanly"
-  echo "Exiting. (exit code $exit_code)"
-  exit "$exit_code"
+else
+  echo "INFO: FDSLoader test run completed successfully"
 fi
 
 # Run FDSLoader for real
 echo "INFO: Running FDSLoader in production mode"
-"$fds_loader_binary"
-
-echo "INFO: FDSLoader run completed successfully"
-
-# Backup Database
-# This script should be on $PATH (docker should put it as /usr/local/bin/)
-if ! backup_database.sh; then
+prod_results="$FDS_LOADER_PATH/prod_results.txt"
+if ! "$fds_loader_binary" 2>&1 | tee "$prod_results"; then
   exit_code="$?"
-  echo "ERROR: Database did not backup cleanly cleanly"
+  echo "ERROR: FDSLoader did not run cleanly"
   echo "Exiting. (exit code $exit_code)"
   exit "$exit_code"
+fi
+
+## --FDSLoader64 always exits 0, so using grep to inspect results
+prod_errors=$(grep -c "ERROR" "$prod_results")
+if [ "$prod_errors" -gt 0 ]; then
+  echo "ERROR: FDSLoader run completed with errors"
+  echo "INFO: Generating Support logs"
+  "$fds_loader_binary"--support --support-logs-max 5
+  support_path="$FDS_LOADER_SOURCE_PATH/support_$(date +%Y%m%d_%H%M%S)"
+  mkdir -p "$support_path"
+  cp support_*.zip "$support_path"
+  exit 1
+else
+  echo "INFO: FDSLoader run completed successfully"
+fi
+
+
+if [ -n "$BACKUP_DB" ]; then
+  # Backup Database
+  # This script should be on $PATH (docker should put it as /usr/local/bin/)
+  if ! backup_database.sh; then
+    exit_code="$?"
+    echo "ERROR: Database did not backup cleanly cleanly"
+    echo "Exiting. (exit code $exit_code)"
+    exit "$exit_code"
+  fi
 fi
 
 echo "INFO: Done!"

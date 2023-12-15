@@ -170,6 +170,14 @@
               },
               "environmentVariables": [
                 {
+                  "name": "RESTORE_DB",
+                  "value": ""
+                },
+                {
+                  "name": "BACKUP_DB",
+                  "value": ""
+                },
+                {
                   "name": "PGUSER",
                   "value": "[variables('PGUSER')]"
                 },
