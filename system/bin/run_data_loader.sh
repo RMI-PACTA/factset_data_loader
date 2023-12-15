@@ -72,15 +72,6 @@ if [ -n "$RESTORE_DB" ]; then
   fi
 fi
 
-echo "INFO: Restoring database from backup"
-if ! prepare_FDSLoader.sh; then
-  exit_code="$?"
-  echo "ERROR: FDSLoader setup script did not run cleanly"
-  echo "Exiting. (exit code $exit_code)"
-  exit "$exit_code"
-fi
-
-
 test_results="$FDS_LOADER_PATH/test_results.txt"
 
 ## Run FDSLoader with tests
