@@ -89,6 +89,7 @@
   "functions": [],
 
   "resources": [
+
     {
       "type": "Microsoft.DBforPostgreSQL/flexibleServers",
       "apiVersion": "2021-06-01",
@@ -121,6 +122,18 @@
       }
     },
     {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/configurations",
+      "apiVersion": "2023-03-01-preview",
+      "name": "[format('{0}/{1}', variables('dbServerName'), 'default_transaction_read_only')]",
+      "properties": {
+        "source": "user-override",
+        "value": "off"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('dbServerName'))]"
+      ]
+    },
+    {
       "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
       "apiVersion": "2021-06-01",
       "name": "[format('{0}/{1}', variables('dbServerName'), 'AllowAllWindowsAzureIps')]",
@@ -141,6 +154,7 @@
         "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('dbServerName'))]"
       ]
     },
+
     {
       "type": "Microsoft.ContainerInstance/containerGroups",
       "apiVersion": "2021-09-01",
