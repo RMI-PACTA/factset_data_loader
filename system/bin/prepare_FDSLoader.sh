@@ -61,6 +61,11 @@ if [ -z "$WORKINGSPACEPATH" ]; then
     envvar_fail=1
 fi
 
+if [ -z "$KEY_FILENAME" ]; then
+    echo "ERROR: KEY_FILENAME is not set."
+    envvar_fail=1
+fi
+
 if [ -n "$envvar_fail" ]; then
     echo "One or more required envvars are not set."
     echo "Please set these envvars and try again."
@@ -122,7 +127,7 @@ echo "INFO: Updating config with database password"
 $fds_loader_binary --update-password --instance db --pwd $PGPASSWORD
 
 echo "INFO: Symlinking key.txt"
-ln -sF "$FDS_LOADER_SOURCE_PATH/key.txt" "$key_file"
+ln -sF "$FDS_LOADER_SOURCE_PATH/$KEY_FILENAME" "$key_file"
 
 echo "INFO: checking expected files"
 

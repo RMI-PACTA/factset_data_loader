@@ -216,6 +216,10 @@
                   "secureValue": "[parameters('factset-serial')]"
                 },
                 {
+                  "name": "KEY_FILENAME",
+                  "value": "key.txt"
+                },
+                {
                   "name": "DEPLOY_START_TIME",
                   "value": "[parameters('starttime')]"
                 },
