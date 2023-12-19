@@ -35,4 +35,8 @@ fi
 backupfile="$backups_dir/backup-$DEPLOY_START_TIME-custom.pgdump"
 echo "INFO: pg_dump-ing database to $backupfile"
 
-pg_dump --file="$backupfile" --format=custom --verbose
+pg_dump \
+  --compress=0 \
+  --file="$backupfile" \
+  --format=custom \
+  --verbose
