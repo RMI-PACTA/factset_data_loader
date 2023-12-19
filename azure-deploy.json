@@ -78,7 +78,7 @@
     "dbInstanceType": "Standard_D2ds_v4",
     "dbServerEdition": "GeneralPurpose",
     "dbServerName": "[concat(parameters('containerGroupName'), '-postgres')]",
-    "dbSkuSizeGB": 128,
+    "dbSkuSizeGB": 256,
     "machineCpuCores": 2,
     "machineMemoryInGB": 16,
     "mountPathFDSLoader": "/mnt/factset-loader",
@@ -120,18 +120,6 @@
         },
         "availabilityZone": "[variables('dbAvailabilityZone')]"
       }
-    },
-    {
-      "type": "Microsoft.DBforPostgreSQL/flexibleServers/configurations",
-      "apiVersion": "2023-03-01-preview",
-      "name": "[format('{0}/{1}', variables('dbServerName'), 'default_transaction_read_only')]",
-      "properties": {
-        "source": "user-override",
-        "value": "off"
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('dbServerName'))]"
-      ]
     },
     {
       "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
