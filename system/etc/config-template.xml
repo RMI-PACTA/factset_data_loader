@@ -1,0 +1,33 @@
+<data>
+  <advanced>
+    <atomic_rebuild>1</atomic_rebuild>
+    <max_parallel_limit>{MAX_PARALLEL_LIMIT}</max_parallel_limit>
+  </advanced>
+  <database>
+    <cloud>0</cloud>
+    <database_name>{DATABASE_NAME}</database_name>
+    <dsn>FDSLoader</dsn>
+    <load_executable_path>/usr/bin/psql</load_executable_path>
+    <pass></pass>
+    <port>5432</port>
+    <server_name>{DATABASE_SERVER}</server_name>
+    <type>psql</type>
+    <user>{DATABASE_USER}</user>
+    <using_bulkinsert>0</using_bulkinsert>
+  </database>
+  <download_only>0</download_only>
+  <files>
+    <download_basedir>{DOWNLOAD_BASEDIR}</download_basedir>
+    <local_basedir>{LOCAL_BASEDIR}</local_basedir>
+  </files>
+  <proxy>
+    <custom_setting>NONE</custom_setting>
+  </proxy>
+  <server>
+    <auth_type>otp</auth_type>
+    <protocol>https</protocol>
+    <serial>{FACTSET_SERIAL}</serial>
+    <user>{FACTSET_USER}</user>
+  </server>
+  <version>2.13</version>
+</data>

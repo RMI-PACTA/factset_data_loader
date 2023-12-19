@@ -1,2 +1,6 @@
 key.txt
+mounts/
 
+azure-deploy.parameters.json
+
+.env

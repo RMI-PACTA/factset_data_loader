@@ -1,0 +1,276 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "0.0.0.5",
+
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "identity": {
+      "type": "string",
+      "metadata": {
+        "description": "The ID of the user assigned identity to use for the container group."
+      }
+    },
+    "containerGroupName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the container group."
+      }
+    },
+    "restartPolicy": {
+      "type": "string",
+      "defaultValue": "OnFailure",
+      "allowedValues": [
+        "Always",
+        "Never",
+        "OnFailure"
+      ],
+      "metadata": {
+        "description": "The behavior of Azure runtime if container has stopped."
+      }
+    },
+    "rawdata-storageaccountkey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The storage account key for the rawdata storage account."
+      }
+    },
+    "database-password": {
+      "type": "securestring",
+      "metadata": {
+        "description": "password to connect to database"
+      }
+    },
+    "factset-serial": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Serial Number provided by FactSet"
+      }
+    },
+    "factset-username": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Username provided by FactSet"
+      }
+    },
+    "starttime": {
+      "type": "string",
+      "defaultValue": "[utcNow()]",
+      "metadata": {
+        "description": "The time to start the container group."
+      }
+    }
+  },
+
+  "variables": {
+    "FDSLoaderZipFilename": "FDSLoader-Linux-2.13.6.0.zip",
+    "PGDATABASE": "FDS",
+    "PGHOST": "[concat(variables('dbServerName'), '.postgres.database.azure.com')]",
+    "PGUSER": "postgres",
+    "containerregistry": "ghcr.io/rmi-pacta",
+    "dbAvailabilityZone": "1",
+    "dbHAMode":"Disabled",
+    "dbInstanceType": "Standard_D2ds_v4",
+    "dbServerEdition": "GeneralPurpose",
+    "dbServerName": "[concat(parameters('containerGroupName'), '-postgres')]",
+    "dbSkuSizeGB": 256,
+    "machineCpuCores": 2,
+    "machineMemoryInGB": 16,
+    "mountPathFDSLoader": "/mnt/factset-loader",
+    "mountPathWorkingSpace": "/mnt/workingspace",
+    "postgresVersion": "14"
+  },
+
+  "functions": [],
+
+  "resources": [
+
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+      "apiVersion": "2021-06-01",
+      "name": "[variables('dbServerName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[variables('dbInstanceType')]",
+        "tier": "[variables('dbServerEdition')]"
+      },
+      "properties": {
+        "version": "[variables('postgresVersion')]",
+        "administratorLogin": "[variables('PGUSER')]",
+        "administratorLoginPassword": "[parameters('database-password')]",
+        "network": {
+          "delegatedSubnetResourceId": "[json('null')]",
+          "privateDnsZoneArmResourceId": "[json('null')]"
+        },
+        "highAvailability": {
+          "mode": "[variables('dbHAMode')]"
+        },
+        "storage": {
+          "autoGrow": "Enabled",
+          "storageSizeGB": "[variables('dbSkuSizeGB')]"
+        },
+        "backup": {
+          "backupRetentionDays": 7,
+          "geoRedundantBackup": "Disabled"
+        },
+        "availabilityZone": "[variables('dbAvailabilityZone')]"
+      }
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/firewallRules",
+      "apiVersion": "2021-06-01",
+      "name": "[format('{0}/{1}', variables('dbServerName'), 'AllowAllWindowsAzureIps')]",
+      "properties": {
+        "endIpAddress": "0.0.0.0",
+        "startIpAddress": "0.0.0.0"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('dbServerName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DBforPostgreSQL/flexibleServers/databases",
+      "apiVersion": "2021-06-01",
+      "name": "[format('{0}/{1}', variables('dbServerName'), variables('PGDATABASE'))]",
+      "properties": {},
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('dbServerName'))]"
+      ]
+    },
+
+    {
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2021-09-01",
+      "name": "[parameters('containerGroupName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[parameters('identity')]": {}
+        }
+      },
+      "properties": {
+        "containers": [
+          {
+            "name": "loader-runner",
+            "properties": {
+              "image": "[concat(variables('containerregistry'),'/factset_data_loader:pr2')]",
+              "command": [
+                "tail", "-f", "/dev/null"
+              ],
+              "ports": [],
+              "resources": {
+                "requests": {
+                  "cpu": "[variables('machineCpuCores')]",
+                  "memoryInGB": "[variables('machineMemoryInGB')]"
+                }
+              },
+              "environmentVariables": [
+                {
+                  "name": "RESTORE_DB",
+                  "value": ""
+                },
+                {
+                  "name": "BACKUP_DB",
+                  "value": ""
+                },
+                {
+                  "name": "PGUSER",
+                  "value": "[variables('PGUSER')]"
+                },
+                {
+                  "name": "PGPASSWORD",
+                  "secureValue": "[parameters('database-password')]"
+                },
+                {
+                  "name": "PGHOST",
+                  "value": "[variables('PGHOST')]"
+                },
+                {
+                  "name": "PGDATABASE",
+                  "value": "[variables('PGDATABASE')]"
+                },
+                {
+                  "name": "FACTSET_USER",
+                  "value": "[parameters('factset-username')]"
+                },
+                {
+                  "name": "FACTSET_SERIAL",
+                  "secureValue": "[parameters('factset-serial')]"
+                },
+                {
+                  "name": "KEY_FILENAME",
+                  "value": "key.txt"
+                },
+                {
+                  "name": "DEPLOY_START_TIME",
+                  "value": "[parameters('starttime')]"
+                },
+                {
+                  "name": "MACHINE_CORES",
+                  "value": "[variables('machineCpuCores')]"
+                },
+                {
+                  "name": "WORKINGSPACEPATH",
+                  "value": "[variables('mountPathWorkingSpace')]"
+                },
+                {
+                  "name": "LOG_LEVEL",
+                  "value": "DEBUG"
+                },
+                {
+                  "name": "FDS_LOADER_PATH",
+                  "value": "/home/fdsrunner"
+                },
+                {
+                  "name": "FDS_LOADER_ZIP_FILENAME",
+                  "value": "[variables('FDSLoaderZipFilename')]"
+                },
+                {
+                  "name": "FDS_LOADER_SOURCE_PATH",
+                  "value": "[variables('mountPathFDSLoader')]"
+                }
+              ],
+              "volumeMounts": [
+                {
+                  "name": "factset-loader",
+                  "mountPath": "[variables('mountPathFDSLoader')]"
+                },
+                {
+                  "name": "workingspace",
+                  "mountPath": "[variables('mountPathWorkingSpace')]"
+                }
+              ]
+            }
+          }
+        ],
+        "restartPolicy": "[parameters('restartPolicy')]",
+        "osType": "Linux",
+        "volumes": [
+          {
+            "name": "workingspace",
+            "emptyDir": {}
+          },
+          {
+            "name": "factset-loader",
+            "azureFile": {
+              "shareName": "factset-loader",
+              "readOnly": false,
+              "storageAccountName": "pactarawdata",
+              "storageAccountKey": "[parameters('rawdata-storageaccountkey')]"
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('dbServerName'))]"
+      ]
+    }
+  ],
+  "outputs": {}
+}
