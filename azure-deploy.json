@@ -58,6 +58,27 @@
         "description": "Username provided by FactSet"
       }
     },
+    "backupDB": {
+      "type": "string",
+      "defaultValue": "1",
+      "metadata": {
+        "description": "Backup the database to a file."
+      }
+    },
+    "restoreDB": {
+      "type": "string",
+      "defaultValue": "1",
+      "metadata": {
+        "description": "Restore the database from a backup."
+      }
+    },
+    "loaderImageTag": {
+      "type": "string",
+      "defaultValue": "main",
+      "metadata": {
+        "description": "Image tag for the loader container."
+      }
+    },
     "starttime": {
       "type": "string",
       "defaultValue": "[utcNow()]",
@@ -159,10 +180,7 @@
           {
             "name": "loader-runner",
             "properties": {
-              "image": "[concat(variables('containerregistry'),'/factset_data_loader:pr2')]",
-              "command": [
-                "tail", "-f", "/dev/null"
-              ],
+              "image": "[concat(variables('containerregistry'),'/factset_data_loader:', parameters('loaderImageTag'))]",
               "ports": [],
               "resources": {
                 "requests": {
@@ -173,11 +191,11 @@
               "environmentVariables": [
                 {
                   "name": "RESTORE_DB",
-                  "value": ""
+                  "value": "[parameters('restoreDB')]"
                 },
                 {
                   "name": "BACKUP_DB",
-                  "value": ""
+                  "value": "[parameters('backupDB')]"
                 },
                 {
                   "name": "PGUSER",
