@@ -35,4 +35,8 @@ restorefile=$(find "$backups_dir" -type f | sort -t "-" -k 2 -nr | head -n 1)
 
 echo "INFO: pg_restore-ing database from $restorefile"
 
-pg_restore --verbose -d "$PGDATABASE" "$restorefile"
+pg_restore \
+  --dbname="$PGDATABASE" \
+  --jobs="$MACHINE_CORES" \
+  --verbose \
+  "$restorefile"
