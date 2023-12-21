@@ -33,6 +33,11 @@ if [ -z "$FDS_LOADER_SOURCE_PATH" ]; then
     envvar_fail=1
 fi
 
+if [ -z "$WORKINGSPACEPATH" ]; then
+    echo "ERROR: WORKINGSPACEPATH is not set."
+    envvar_fail=1
+fi
+
 if [ -n "$envvar_fail" ]; then
     echo "One or more required envvars are not set."
     echo "Please set these envvars and try again."
@@ -71,7 +76,7 @@ if [ -n "$RESTORE_DB" ]; then
     echo "Exiting. (exit code $exit_code)"
     exit "$exit_code"
   fi
-  touch "$WORKING_DIR/done_restore"
+  touch "$WORKINGSPACEPATH/done_restore"
 fi
 
 test_results="$FDS_LOADER_PATH/test_results.txt"
@@ -125,7 +130,7 @@ else
   echo "INFO: FDSLoader run completed successfully"
 fi
 
-touch "$WORKING_DIR/done_loader"
+touch "$WORKINGSPACEPATH/done_loader"
 
 if [ -n "$BACKUP_DB" ]; then
   # Backup Database
@@ -136,7 +141,7 @@ if [ -n "$BACKUP_DB" ]; then
     echo "Exiting. (exit code $exit_code)"
     exit "$exit_code"
   fi
-  touch "$WORKING_DIR/done_backup"
+  touch "$WORKINGSPACEPATH/done_backup"
 fi
 
 echo "INFO: Done!"
