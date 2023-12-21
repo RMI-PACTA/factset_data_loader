@@ -71,6 +71,7 @@ if [ -n "$RESTORE_DB" ]; then
     echo "Exiting. (exit code $exit_code)"
     exit "$exit_code"
   fi
+  touch "$WORKING_DIR/done_restore"
 fi
 
 test_results="$FDS_LOADER_PATH/test_results.txt"
@@ -124,6 +125,7 @@ else
   echo "INFO: FDSLoader run completed successfully"
 fi
 
+touch "$WORKING_DIR/done_loader"
 
 if [ -n "$BACKUP_DB" ]; then
   # Backup Database
@@ -134,6 +136,7 @@ if [ -n "$BACKUP_DB" ]; then
     echo "Exiting. (exit code $exit_code)"
     exit "$exit_code"
   fi
+  touch "$WORKING_DIR/done_backup"
 fi
 
 echo "INFO: Done!"
