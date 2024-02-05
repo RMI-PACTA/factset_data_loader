@@ -72,6 +72,13 @@
         "description": "Restore the database from a backup."
       }
     },
+    "restoreFile": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Path to the backup file to restore (relative to $FDS_LOADER_SOURCE_PATH/backups)."
+      }
+    },
     "loaderImageTag": {
       "type": "string",
       "defaultValue": "main",
@@ -192,6 +199,10 @@
                 {
                   "name": "RESTORE_DB",
                   "value": "[parameters('restoreDB')]"
+                },
+                {
+                  "name": "RESTORE_FILE",
+                  "value": "[parameters('restoreFile')]"
                 },
                 {
                   "name": "BACKUP_DB",

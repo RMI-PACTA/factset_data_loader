@@ -31,7 +31,15 @@ if [ -n "$file_fail" ]; then
   exit 1
 fi
 
-restorefile=$(find "$backups_dir" -type f | sort -t "-" -k 2 -nr | head -n 1)
+if [ -z "$RESTORE_FILE" ]; then
+  restorefile=$(find "$backups_dir" -type f | sort -t "-" -k 2 -nr | head -n 1)
+else
+  restorefile="$backups_dir/$RESTORE_FILE"
+  if [ ! -f "$restorefile" ]; then
+    echo "ERROR: Restore file not found at $restorefile"
+    exit 1
+  fi
+fi
 
 echo "INFO: pg_restore-ing database from $restorefile"
 
