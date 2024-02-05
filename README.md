@@ -29,6 +29,7 @@ During local development, these can are via `.env` which docker-compose reads, o
 * `$PGPASSWORD`: Password for PostgreSQL database.
 * `$PGUSER`: Username for PostgreSQL superuser
 * `$WORKINGSPACEPATH`: Path to empy directory used for downloading data file from FactSet. This path should have available space equal to `16 Gb * $MACHINE_CORES` (suggested by FactSet documentation).
+* `$RESTORE_FILE`: filepath to backup file to use as base for restoring database
 
 ## Acquiring Loader Binaries
 
