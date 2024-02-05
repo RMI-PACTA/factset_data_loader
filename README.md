@@ -16,6 +16,7 @@
 Environment variable control the behavior of this container.
 During local development, these can are via `.env` which docker-compose reads, or set as part of `azure-deploy.json` for cloud deployments.
 
+* `$BYPASS_LOADER`: Set to non-empty string to disable running FDSLoader (restore-only).
 * `$DEPLOY_START_TIME`: UTC timestamp used to distinguish exported datasets.
 * `$FACTSET_SERIAL`: Serial number for FactSet account, provided by FactSet.
 * `$FACTSET_USER`: Username for FactSet account, provided by FactSet.

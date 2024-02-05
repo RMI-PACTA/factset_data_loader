@@ -14,11 +14,13 @@ fi
 # Copy and unzip FDSLoader Application
 # Includes preparing Config file
 # This script should be on $PATH (docker should put it as /usr/local/bin/)
-if ! prepare_FDSLoader.sh; then
-  exit_code="$?"
-  echo "ERROR: FDSLoader setup script did not run cleanly"
-  echo "Exiting. (exit code $exit_code)"
-  exit "$exit_code"
+if [ -z "$BYPASS_LOADER" ]; then
+  if ! prepare_FDSLoader.sh; then
+    exit_code="$?"
+    echo "ERROR: FDSLoader setup script did not run cleanly"
+    echo "Exiting. (exit code $exit_code)"
+    exit "$exit_code"
+  fi
 fi
 
 # Check that everything is ready:
@@ -82,52 +84,54 @@ fi
 test_results="$FDS_LOADER_PATH/test_results.txt"
 support_path="$FDS_LOADER_SOURCE_PATH/support_$(date +%Y%m%d_%H%M%S)"
 
-## Run FDSLoader with tests
-echo "INFO: Running FDSLoader in test mode"
-if ! "$fds_loader_binary" --test 2>&1 | tee "$test_results"; then
-  exit_code="$?"
-  echo "ERROR: FDSLoader did not run cleanly"
-  echo "Exiting. (exit code $exit_code)"
-  exit "$exit_code"
-fi
+if [ -z "$BYPASS_LOADER" ]; then
+  ## Run FDSLoader with tests
+  echo "INFO: Running FDSLoader in test mode"
+  if ! "$fds_loader_binary" --test 2>&1 | tee "$test_results"; then
+    exit_code="$?"
+    echo "ERROR: FDSLoader did not run cleanly"
+    echo "Exiting. (exit code $exit_code)"
+    exit "$exit_code"
+  fi
 
-## --test always exits 0, so using grep to inspect results
-test_errors=$(grep -c "ERROR" "$test_results")
-if [ "$test_errors" -gt 0 ]; then
-  echo "ERROR: FDSLoader test run completed with errors"
-  mkdir -p "$support_path"
-  cp "$test_results" "$support_path"
-  exit 1
-else
-  echo "INFO: FDSLoader test run completed successfully"
-fi
+  ## --test always exits 0, so using grep to inspect results
+  test_errors=$(grep -c "ERROR" "$test_results")
+  if [ "$test_errors" -gt 0 ]; then
+    echo "ERROR: FDSLoader test run completed with errors"
+    mkdir -p "$support_path"
+    cp "$test_results" "$support_path"
+    exit 1
+  else
+    echo "INFO: FDSLoader test run completed successfully"
+  fi
 
-# clean FDSLoader context
-clean_fds_leftovers.sh
+  # clean FDSLoader context
+  clean_fds_leftovers.sh
 
-# Run FDSLoader for real
-echo "INFO: Running FDSLoader in production mode"
-prod_results="$FDS_LOADER_PATH/prod_results.txt"
-if ! "$fds_loader_binary" 2>&1 | tee "$prod_results"; then
-  exit_code="$?"
-  echo "ERROR: FDSLoader did not run cleanly"
-  echo "Exiting. (exit code $exit_code)"
-  exit "$exit_code"
-fi
+  # Run FDSLoader for real
+  echo "INFO: Running FDSLoader in production mode"
+  prod_results="$FDS_LOADER_PATH/prod_results.txt"
+  if ! "$fds_loader_binary" 2>&1 | tee "$prod_results"; then
+    exit_code="$?"
+    echo "ERROR: FDSLoader did not run cleanly"
+    echo "Exiting. (exit code $exit_code)"
+    exit "$exit_code"
+  fi
 
-## --FDSLoader64 always exits 0, so using grep to inspect results
-prod_errors=$(grep -c "ERROR" "$prod_results")
-if [ "$prod_errors" -gt 0 ]; then
-  echo "ERROR: FDSLoader run completed with errors"
-  echo "INFO: Generating Support logs"
-  "$fds_loader_binary" --support --support-logs-max 5
-  mkdir -p "$support_path"
-  cp "$test_results" "$support_path"
-  cp "$prod_results" "$support_path"
-  cp support_*.zip "$support_path"
-  exit 1
-else
-  echo "INFO: FDSLoader run completed successfully"
+  ## --FDSLoader64 always exits 0, so using grep to inspect results
+  prod_errors=$(grep -c "ERROR" "$prod_results")
+  if [ "$prod_errors" -gt 0 ]; then
+    echo "ERROR: FDSLoader run completed with errors"
+    echo "INFO: Generating Support logs"
+    "$fds_loader_binary" --support --support-logs-max 5
+    mkdir -p "$support_path"
+    cp "$test_results" "$support_path"
+    cp "$prod_results" "$support_path"
+    cp support_*.zip "$support_path"
+    exit 1
+  else
+    echo "INFO: FDSLoader run completed successfully"
+  fi
 fi
 
 touch "$WORKINGSPACEPATH/done_loader"

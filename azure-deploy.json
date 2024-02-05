@@ -79,8 +79,15 @@
         "description": "Image tag for the loader container."
       }
     },
-    "starttime": {
+    "bypassLoader": {
       "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Set to non-empty value to bypass running FDSLoader64."
+      }
+    },
+    "starttime": {
+      "type": "string",.
       "defaultValue": "[utcNow()]",
       "metadata": {
         "description": "The time to start the container group."
@@ -189,6 +196,10 @@
                 }
               },
               "environmentVariables": [
+                {
+                  "name": "BYPASS_LOADER",
+                  "value": "[parameters('bypassLoader')]"
+                },
                 {
                   "name": "RESTORE_DB",
                   "value": "[parameters('restoreDB')]"
